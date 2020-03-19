@@ -17,43 +17,47 @@ const ingredientReducer = (currentIngredients, action) => {
 
 const Ingredients = () => {
   const [userIngredients, dispatch] = useReducer(ingredientReducer, []);
-  const {isLoading, data, error, sendRequest} = useHttp();
+  const {isLoading, data, error, sendRequest, extra, id} = useHttp();
 
   console.log('Rendering Ingredients');
 
   useEffect(() => {
-    
-  }, [data]);
+    if(!isLoading && !error) {
+      if(id === 'DELETE_INGREDIENT') {
+        dispatch({type: 'DELETE', id: extra})
+      } else if (id === 'ADD_INGREDIENT') {
+        console.log(data);
+        dispatch({
+          type: 'ADD',
+          ingredient: {
+            id: data.name,
+            ...extra
+          }
+        });
+      } else {
+        // Unhandled
+      }
+    }
+  }, [data, extra, id, isLoading, error]);
 
   const addIngredientHandler = useCallback(ingredient => {
-    // dispatchHttp({type: 'SEND'});
-    // fetch('https://react-hooks-update-c82b6.firebaseio.com/ingredients.json', {
-    //   method: 'POST',
-    //   body: JSON.stringify(ingredient),
-    //   headers: {
-    //     'Content-type': 'application/json'
-    //   }
-    // })
-    // .then(response => response.json())
-    // .then(data => {
-    //   dispatchHttp({type: 'RESPONSE'});
-    //   dispatch({
-    //     type: 'ADD',
-    //     ingredient: {
-    //       id: data.name,
-    //       ...ingredient
-    //     }
-    //   });
-    // })
-    // .catch(error => {
-    //   dispatchHttp({type: 'ERROR', error: error.message});
-    // });
-  }, [])
+    sendRequest(
+      'https://react-hooks-update-c82b6.firebaseio.com/ingredients.json',
+      'POST',
+      JSON.stringify(ingredient),
+      ingredient,
+      'ADD_INGREDIENT'
+    );
+  }, [sendRequest])
 
   const removeIngredientHandler = useCallback((id) => {
     sendRequest(
       `https://react-hooks-update-c82b6.firebaseio.com/ingredients/${id}.json`,
-      'DELETE');
+      'DELETE',
+      null,
+      id,
+      'DELETE_INGREDIENT'
+    );
   }, [sendRequest])
 
   const filteredIngredientsHandler = useCallback(filteredIngredients => {
